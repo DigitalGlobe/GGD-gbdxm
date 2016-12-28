@@ -18,7 +18,7 @@ else()
 endif()
 
 # Initialize gbdxversion.h
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gbdxmVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/gbdxmVersion.h)
+configure_file(gbdxmVersion.h.in include/gbdxmVersion.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_executable(gbdxm
