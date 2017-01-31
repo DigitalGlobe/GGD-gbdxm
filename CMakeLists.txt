@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
 # gbdxm version
 set(gbdxm_VERSION_MAJOR 0)
 set(gbdxm_VERSION_MINOR 1)
+set(gbdxm_VERSION_PATCH 0)
 
 # Set the build number
 if(DEFINED ENV{BUILD_NUMBER})
@@ -57,3 +58,6 @@ if (JSONCPP_FOUND)
     include_directories(${JSONCPP_INCLUDE_DIR})
     target_link_libraries(gbdxm ${JSONCPP_LIBRARY})
 endif()
+
+find_package(Threads)
+target_link_libraries(gbdxm ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
