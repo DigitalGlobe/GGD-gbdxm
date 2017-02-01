@@ -32,6 +32,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <classification/CaffeModelPackage.h>
+#include <classification/DLibModelPackage.h>
 #include <classification/ModelMetadataJson.h>
 #include <imagery/cv_program_options.hpp>
 #include <json/json.h>
@@ -192,7 +193,7 @@ void addPackOptions(po::options_description& desc)
 {
     po::options_description pack("Pack Options");
     pack.add_options()
-        ("type,t", po::value<string>(), "Type of the input model. Currently supported types:\n \t - caffe")
+        ("type,t", po::value<string>(), "Type of the input model. Currently supported types:\n \t - caffe\n \t - dlib")
         ("json,j", po::value<string>(), "Model metadata in JSON format. Command line parameters will override entries in this file if present.")
         ("name,n", po::value<string>(), "Model name.")
         ("version,V", po::value<string>(), "Model version.")
@@ -524,6 +525,8 @@ const vector<string>& modelItemNames(const string& type)
 {
     if(type == "caffe") {
         return CaffeModelPackage::ITEM_NAMES;
+    } else if(type == "dlib") {
+        return DLibModelPackage::ITEM_NAMES;
     } else {
         cerr << "Unsupported model type: " << type.c_str() << "." << endl;
         exit(1);
