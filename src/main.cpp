@@ -34,7 +34,7 @@
 #include <classification/CaffeModelPackage.h>
 #include <classification/DLibModelPackage.h>
 #include <classification/ModelMetadataJson.h>
-#include <imagery/cv_program_options.hpp>
+#include <geometry/cv_program_options.hpp>
 #include <json/json.h>
 
 namespace po = boost::program_options;

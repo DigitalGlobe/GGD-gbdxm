@@ -18,8 +18,8 @@ else()
 endif()
 
 # Initialize gbdxversion.h
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gbdxmVersion.h.in ${CMAKE_BINARY_DIR}/include/gbdxmVersion.h)
-include_directories(${CMAKE_BINARY_DIR}/include)
+configure_file(gbdxmVersion.h.in include/gbdxmVersion.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_executable(gbdxm
         src/main.cpp
@@ -50,4 +50,10 @@ set(Boost_USE_MULTITHREADED ON)
 find_package(Boost COMPONENTS program_options REQUIRED)
 if(Boost_FOUND)
     target_link_libraries(gbdxm ${Boost_PROGRAM_OPTIONS_LIBRARY})
+endif()
+
+find_package(Jsoncpp REQUIRED)
+if (JSONCPP_FOUND)
+    include_directories(${JSONCPP_INCLUDE_DIR})
+    target_link_libraries(gbdxm ${JSONCPP_LIBRARY})
 endif()
