@@ -74,6 +74,7 @@ po::options_description buildHiddenOptions();
 void addShowOptions(po::options_description& desc);
 void addPackOptions(po::options_description& desc);
 void addPackCaffeOptions(po::options_description& desc);
+void addPackDLibOptions(po::options_description& desc);
 void addUnpackOptions(po::options_description& desc);
 
 GbdxmArgs* readArgs(const po::variables_map& vm, const string& action);
@@ -212,6 +213,7 @@ void addPackOptions(po::options_description& desc)
         ;
 
     addPackCaffeOptions(pack);
+    addPackDLibOptions(pack);
 
     desc.add(pack);
 }
@@ -225,6 +227,15 @@ void addPackCaffeOptions(po::options_description& desc)
         ("caffe-mean", po::value<string>(), "Caffe mean file name.");
 
     desc.add(caffe);
+}
+
+void addPackDLibOptions(po::options_description& desc)
+{
+    po::options_description dlib("Pack Caffe Options");
+    dlib.add_options()
+        ("dlib-model", po::value<string>(), "DLib model file name.");
+
+    desc.add(dlib);
 }
 
 void addUnpackOptions(po::options_description& desc)
@@ -471,7 +482,7 @@ void readModelMetadata(GbdxmPackArgs& args, vector<string>& missingFields)
     for(const auto& itemName : model->modelMetadataItemNames()) {
         const string& fileName = args.modelFiles[itemName];
         printVerbose(args, "Reading model metadata from " + fileName + "...");
-
+        
         if(!exists(fileName) || is_directory(fileName)) {
             cerr << fileName << " does not exist." << endl;
             exit(1);
