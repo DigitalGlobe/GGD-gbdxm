@@ -66,6 +66,7 @@ INSTALL(TARGETS gbdxm
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
+
         )
 
 if (UNIX AND NOT APPLE)
@@ -82,3 +83,4 @@ if (UNIX AND NOT APPLE)
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 endif()
 include(CPack)
+
