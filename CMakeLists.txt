@@ -61,3 +61,9 @@ endif()
 
 find_package(Threads)
 target_link_libraries(gbdxm ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+
+INSTALL(TARGETS gbdxm
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        )
