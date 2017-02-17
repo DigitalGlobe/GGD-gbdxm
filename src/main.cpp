@@ -233,7 +233,7 @@ void addPackDLibOptions(po::options_description& desc)
 {
     po::options_description dlib("Pack Caffe Options");
     dlib.add_options()
-        ("dlib-model", po::value<string>(), "DLib model file name.");
+        ("dlib-weights", po::value<string>(), "DLib weights file name.");
 
     desc.add(dlib);
 }
@@ -568,3 +568,4 @@ void tryErase(vector<string>& names, const string& name)
 }
 
 } } } // namespace dg { namespace deepcore { namespace classification {
+
