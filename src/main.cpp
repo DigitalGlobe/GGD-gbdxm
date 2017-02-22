@@ -315,7 +315,7 @@ GbdxmArgs* readPackArgs(const po::variables_map& vm)
         auto type = vm["type"].as<string>();
         to_lower(type);
 
-        args->metadata.reset(ModelMetadata::create(type.c_str()));
+        args->metadata = ModelMetadata::create(type.c_str());
         missingFields = ModelMetadataJson::fieldNames(type);
         tryErase(missingFields, "type");
         tryErase(missingFields, "version");
