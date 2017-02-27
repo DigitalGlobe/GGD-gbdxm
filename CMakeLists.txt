@@ -7,8 +7,8 @@ project(gbdxm CXX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
 
 # gbdxm version
-set(gbdxm_VERSION_MAJOR 0)
-set(gbdxm_VERSION_MINOR 1)
+set(gbdxm_VERSION_MAJOR 1)
+set(gbdxm_VERSION_MINOR 0)
 set(gbdxm_VERSION_PATCH 0)
 
 # Set the build number
