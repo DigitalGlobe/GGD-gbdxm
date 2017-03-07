@@ -6,16 +6,32 @@ ENABLE_LANGUAGE(C)
 project(gbdxm CXX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
 
+#release code
+option(DEEPCORE_RELEASE, "Indicates a release build of gbdxm" OFF)
+set(DEEPCORE_RC "" CACHE STRING "The release candidate version for DeepCore pre-release software.")
+if(DEEPCORE_RELEASE)
+    message("Generating release build.  No build number will be appended to the version number.")
+endif()
+
 # gbdxm version
 set(gbdxm_VERSION_MAJOR 0)
 set(gbdxm_VERSION_MINOR 1)
 set(gbdxm_VERSION_PATCH 0)
 
 # Set the build number
-if(DEFINED ENV{BUILD_NUMBER})
-    set(gbdxm_VERSION_BUILD $ENV{BUILD_NUMBER})
+if(NOT DEEPCORE_RELEASE)
+    if(DEFINED ENV{BUILD_NUMBER})
+        set(gbdxm_VERSION_BUILD $ENV{BUILD_NUMBER})
+    else()
+        set(gbdxm_VERSION_BUILD "SNAPSHOT")
+    endif()
+
+    set(GBDXM_VERSION "${gbdxm_VERSION_MAJOR}.${gbdxm_VERSION_MINOR}.${gbdxm_VERSION_PATCH}+${gbdxm_VERSION_BUILD}")
 else()
-    set(gbdxm_VERSION_BUILD "SNAPSHOT")
+    set(GBDXM_VERSION "${gbdxm_VERSION_MAJOR}.${gbdxm_VERSION_MINOR}.${gbdxm_VERSION_PATCH}")
+    if(${DEEPCORE_RC})
+        set(GBDXM_VERSION "${GBDXM_VERSION}-rc${DEEPCORE_RC}")
+    endif()
 endif()
 
 # Initialize gbdxversion.h
@@ -74,9 +90,8 @@ if (UNIX AND NOT APPLE)
     set(CPACK_PACKAGE_NAME "gbdxm")
     set(CPACK_PACKAGE_VENDOR "DigitalGlobe")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "DeepCore Support <deepcore-support@digitalglobe.com>")
-    set(CPACK_DEBIAN_PACKAGE_VERSION "${gbdxm_VERSION_MAJOR}.${gbdxm_VERSION_MINOR}.${gbdxm_VERSION_PATCH}+${gbdxm_VERSION_BUILD}")
-    set(CPACK_PACKAGE_VERSION "${gbdxm_VERSION_MAJOR}.${gbdxm_VERSION_MINOR}.${gbdxm_VERSION_PATCH}+${gbdxm_VERSION_BUILD}")
-    set(CPACK_PACKAGE_VERSION_MAJOR "${gbdxm_VERSION_MAJOR}")
+    set(CPACK_DEBIAN_PACKAGE_VERSION "${GBDXM_VERSION}")
+    set(CPACK_PACKAGE_VERSION "${GBDXM_VERSION}")
     set(CPACK_PACKAGE_VERSION_MINOR "${gbdxm_VERSION_MINOR}")
     set(CPACK_PACKAGE_VERSION_PATCH "${gbdxm_VERSION_PATCH}")
     set(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")

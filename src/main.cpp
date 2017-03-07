@@ -29,6 +29,7 @@
 #include <classification/ModelMetadataJson.h>
 #include <geometry/cv_program_options.hpp>
 #include <json/json.h>
+#include <DeepCoreVersion.h>
 
 namespace po = boost::program_options;
 
@@ -147,7 +148,8 @@ po::options_description buildVisibleOptions()
 {
     po::options_description desc(
         "GDBX Model Packaging Tool\n"
-        "Version: " GBDXM_VERSION_STRING "\n\n"
+        "Version: " GBDXM_VERSION_STRING "\n"
+        "Built on DeepCore version: " DEEPCORE_VERSION_STRING "\n\n"
         "Usage: gbdxm <action> [options] [gbdxm file]\n\n"
         "Actions:\n"
         "  help\t\t\t Show this help message.\n"
