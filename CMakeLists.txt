@@ -34,6 +34,8 @@ else()
     endif()
 endif()
 
+set(gbdxm_VERSION ${GBDXM_VERSION})
+
 # Initialize gbdxversion.h
 configure_file(gbdxmVersion.h.in include/gbdxmVersion.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
