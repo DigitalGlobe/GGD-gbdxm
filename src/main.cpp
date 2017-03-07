@@ -347,8 +347,8 @@ GbdxmArgs* readPackArgs(const po::variables_map& vm)
 
     // --window-size
     if(vm.count("window-size")) {
-        args->metadata->setWindowSize(vm["window-size"].as<cv::Size>());
-        tryErase(missingFields, "windowSize");
+        args->metadata->setModelSize(vm["window-size"].as<cv::Size>());
+        tryErase(missingFields, "modelSize");
     }
 
     // --bounding-box
