@@ -98,7 +98,7 @@ void showModel(const GbdxmArgs& args)
         }
 
         if(fs::is_directory(gbdxPath)) {
-            cerr << gbdxPath.c_str() << " is  a directory." << endl;
+            cerr << gbdxPath.c_str() << " is a directory." << endl;
             exit(1);
         }
 
