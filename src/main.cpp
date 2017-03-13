@@ -197,8 +197,8 @@ void addPackOptions(po::options_description& desc)
         ("date-time", po::value<string>(), "Date/time the model was created (optional). Date/time is normally set "
             "automatically, specifying this argument is not recommended. Must be in ISO format, which is "
             "YYYYMMDDTHHMMSS,fffffffff where T is the date-time separator. i.e. 20020131T100001,123456789")
-        ("window-size,w", po::cvSize_value(), "Classifier window size. Model parameters will "
-            "override this if present. Must specify width and height. i.e. --window-size 128 128")
+        ("model-size,w", po::cvSize_value(), "Classifier model size. Model parameters will "
+            "override this if present. Must specify width and height. i.e. --model-size 128 128")
         ("bounding-box,b", po::cvRect2d_value(), "Training area bounding box. Must specify four "
             "coordinates: west longitude, south latitude, east longitude, and north latitude. i.e. "
             "--bounding-box -84.06163 37.22197 -84.038803 37.240162")
@@ -347,10 +347,10 @@ GbdxmArgs* readPackArgs(const po::variables_map& vm)
 
     tryErase(missingFields, "timeCreated");
 
-    // --window-size
-    if(vm.count("window-size")) {
-        args->metadata->setWindowSize(vm["window-size"].as<cv::Size>());
-        tryErase(missingFields, "windowSize");
+    // --model-size
+    if(vm.count("model-size")) {
+        args->metadata->setModelSize(vm["model-size"].as<cv::Size>());
+        tryErase(missingFields, "modelSize");
     }
 
     // --bounding-box
