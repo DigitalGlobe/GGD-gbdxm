@@ -326,7 +326,9 @@ GbdxmArgs* readPackArgs(const po::variables_map& vm)
     // --labels
     if(vm.count("labels")) {
         args->labelsFile = vm["labels"].as<string>();
-        tryErase(missingFields, "labels");
+        if (!args->labelsFile.empty()) {
+            tryErase(missingFields, "labels");
+        }
     }
 
     // --date-time
@@ -377,7 +379,7 @@ GbdxmArgs* readPackArgs(const po::variables_map& vm)
         itemNames.pop_back();
 
         auto argName = string(args->metadata->type()) + "-" + itemName;
-        if(vm.count(argName)) {
+        if(vm.count(argName) && !vm[argName].as<string>().empty()) {
             args->modelFiles[itemName] = vm[argName].as<string>();
         } else if(args->modelFiles.find(itemName) == args->modelFiles.end()){
             missingArgs.push_back(argName);
@@ -466,7 +468,7 @@ void readModelMetadata(GbdxmPackArgs& args, vector<string>& missingFields)
         printVerbose(args, "Reading model metadata from " + fileName + "...");
 
         if(!exists(fileName) || is_directory(fileName)) {
-            cerr << fileName << " does not exist." << endl;
+            cerr << "File does not exist for " << itemName << " at '" << fileName << "'" << endl;
             exit(1);
         }
 
@@ -474,14 +476,14 @@ void readModelMetadata(GbdxmPackArgs& args, vector<string>& missingFields)
 
         ifstream ifs(fileName, ios::binary);
         if(ifs.bad()) {
-            cerr << "Error opening " << fileName << "." << endl;
+            cerr << "Error opening " << itemName << " from '" << fileName << "'" << endl;
             exit(1);
         }
 
         vector<uint8_t> buf(static_cast<size_t>(length), 0);
         ifs.read(reinterpret_cast<char*>(buf.data()), length);
         if(ifs.bad()) {
-            cerr << "Error reading " << fileName << "." << endl;
+            cerr << "Error reading " << itemName << " from '" << fileName << "'" << endl;
             exit(1);
         }
 

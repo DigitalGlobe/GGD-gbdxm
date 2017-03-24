@@ -93,12 +93,12 @@ void showModel(const GbdxmArgs& args)
     try {
         fs::path gbdxPath(args.gbdxFile);
         if(!fs::exists(gbdxPath)) {
-            cerr << gbdxPath.c_str() << " does not exist." << endl;
+            cerr << "Input file does not exist at '" << args.gbdxFile << "'." << endl;
             exit(1);
         }
 
         if(fs::is_directory(gbdxPath)) {
-            cerr << gbdxPath.c_str() << " is a directory." << endl;
+            cerr << "Input file at '" << args.gbdxFile << "' is a directory." << endl;
             exit(1);
         }
 
@@ -117,7 +117,7 @@ void showModel(const GbdxmArgs& args)
         cerr << "Error showing the model: " << e.what() << endl;
         exit(1);
     } catch(...) {
-        cerr << "Unkwnon error showing the model." << endl;
+        cerr << "Unknown error showing the model." << endl;
         exit(1);
     }
 
@@ -142,20 +142,17 @@ void packModel(GbdxmPackArgs& args)
         }
 
         // Check the input files
-
         bool missingFiles = false;
-        if(!args.labelsFile.empty()) {
-            if(!fs::exists(args.labelsFile) || fs::is_directory(args.labelsFile)) {
-                cerr << args.labelsFile << " does not exist." << endl;
-
-            }
+        if(!fs::exists(args.labelsFile) || fs::is_directory(args.labelsFile)) {
+            cerr << "Label file does not exist at '" << args.labelsFile << "'" << endl;
+            missingFiles = true;
         }
 
         // Find out the total file size while we're checking the files
         int64_t totalFileSize = 0;
         for(const auto& mapItem : args.modelFiles) {
             if(!fs::exists(mapItem.second) || fs::is_directory(mapItem.second)) {
-                cerr << mapItem.second << " does not exist." << endl;
+                cerr << "File does not exist for " << mapItem.first << " at '" << mapItem.second << "'" << endl;
                 missingFiles = true;
                 continue;
             }
@@ -214,19 +211,19 @@ void unpackModel(const GbdxmUnpackArgs& args)
     try {
         // Make sure the input file exists
         if(!fs::exists(fs::absolute(args.gbdxFile).parent_path())) {
-            cerr << args.gbdxFile << " does not exist." << endl;
+            cerr << "Input file does not exist at '" << args.gbdxFile << "'." << endl;
             exit(1);
         }
 
         if(fs::is_directory(args.gbdxFile)) {
-            cerr << args.gbdxFile << " is a directory." << endl;
+            cerr << "Input file at '" << args.gbdxFile << "' is a directory." << endl;
             exit(1);
         }
 
         // Make sure the output directory exists and create one if it doesn't
         if(!fs::is_directory(args.outputDir)) {
             if(fs::exists(args.outputDir)) {
-                cerr << args.outputDir << " exists, but it's not a directory." << endl;
+                cerr << "Could not create output directory at '" << args.outputDir << "', already a file." << endl;
                 exit(1);
             }
 
@@ -251,14 +248,14 @@ void unpackModel(const GbdxmUnpackArgs& args)
 
             ofstream ofs(fileName, ios::binary);
             if(ofs.bad()) {
-                cerr << "Error creating " << fileName.c_str() << "." << endl;
+                cerr << "Error creating '" << fileName << "' for writing model data." << endl;
                 exit(1);
             }
 
             const auto& modelData = model->item(mapItem.first);
             ofs.write(reinterpret_cast<const char*>(modelData.data()), modelData.size());
             if(ofs.bad()) {
-                cerr << "Error writing model data to " << fileName << "." << endl;
+                cerr << "Error writing model data to '" << fileName << "'." << endl;
                 exit(1);
             }
         }
@@ -277,7 +274,7 @@ vector<string> readLabels(const string& fileName)
 {
     ifstream ifs(fileName);
     if(ifs.bad()) {
-        cerr << "Error opening " << fileName << " for reading." << endl;
+        cerr << "Error opening labels file at '" << fileName << "' for reading." << endl;
         exit(1);
     }
 
@@ -290,7 +287,7 @@ vector<string> readLabels(const string& fileName)
         }
 
         if(ifs.bad()) {
-            cerr << "Error reading from " << fileName << "." << endl;
+            cerr << "Error reading labels from '" << fileName << "'." << endl;
             exit(1);
         }
     }
@@ -302,21 +299,21 @@ void writeLabels(const string& fileName, const vector<string>& labels)
 {
     ofstream ofs(fileName);
     if(ofs.bad()) {
-        cerr << "Error creating " << fileName << "." << endl;
+        cerr << "Error creating labels file at '" << fileName << "'." << endl;
         exit(1);
     }
 
     for(const auto& label : labels) {
         ofs << label << endl;
         if(ofs.bad()) {
-            cerr << "Error writing to " << fileName << "." << endl;
+            cerr << "Error writing labels to '" << fileName << "'." << endl;
             exit(1);
         }
     }
 
     ofs.close();
     if(ofs.bad()) {
-        cerr << "Error writing to " << fileName << "." << endl;
+        cerr << "Error writing labels to '" << fileName << "'." << endl;
         exit(1);
     }
 }
