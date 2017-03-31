@@ -428,6 +428,11 @@ GbdxmArgs* readPackArgs(const po::variables_map& vm)
 
 vector<string> readJsonMetadata(const string& fileName, GbdxmPackArgs& args)
 {
+    if(!exists(fileName) || is_directory(fileName)) {
+        cerr << "Json file does not exist at '" << fileName << "'" << endl;
+        exit(1);
+    }
+
     vector<string> missingFields;
     try {
         ifstream ifs(fileName);

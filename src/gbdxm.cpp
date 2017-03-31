@@ -143,7 +143,11 @@ void packModel(GbdxmPackArgs& args)
 
         // Check the input files
         bool missingFiles = false;
-        if(!fs::exists(args.labelsFile) || fs::is_directory(args.labelsFile)) {
+        if(args.labelsFile.empty() && args.metadata->labels().empty()) {
+            cerr << "Labels not given in a file or json" << endl;
+            missingFiles = true;
+
+        } else if(!args.labelsFile.empty() && (!fs::exists(args.labelsFile) || fs::is_directory(args.labelsFile))) {
             cerr << "Label file does not exist at '" << args.labelsFile << "'" << endl;
             missingFiles = true;
         }
