@@ -76,7 +76,7 @@ vector<string> readJsonMetadata(const string& fileName, GbdxmPackArgs& args);
 void readModelMetadata(GbdxmPackArgs& args, vector<string>& missingFields);
 GbdxmArgs* readUnpackArgs(const po::variables_map& vm);
 const vector<string>& modelItemNames(const string& type);
-ModelMetadata::ColorMode parseColorMode(string arg);
+ColorMode parseColorMode(string arg);
 void tryErase(vector<string>& names, const string& name);
 
 } } } // namespace dg { namespace deepcore { namespace classification {
@@ -443,7 +443,7 @@ vector<string> readJsonMetadata(const string& fileName, GbdxmPackArgs& args)
             exit(1);
         }
 
-        args.metadata.reset(ModelMetadataJson::fromJsonPartial(root, missingFields));
+        args.metadata = ModelMetadataJson::fromJsonPartial(root, missingFields);
 
         if(root.isMember("content")) {
             if(root["content"].type() != Json::objectValue) {
@@ -502,7 +502,7 @@ void readModelMetadata(GbdxmPackArgs& args, vector<string>& missingFields)
     }
 
     // Reset the metadata to reflect changes
-    args.metadata.reset(model->metadata().copy());
+    args.metadata = model->metadata().clone();
 }
 
 GbdxmArgs* readUnpackArgs(const po::variables_map& vm)
@@ -531,19 +531,19 @@ const vector<string>& modelItemNames(const string& type)
     }
 }
 
-ModelMetadata::ColorMode parseColorMode(string arg)
+ColorMode parseColorMode(string arg)
 {
     to_lower(arg);
     trim(arg);
     if(arg == "grayscale") {
-        return ModelMetadata::GRAYSCALE;
+        return ColorMode::GRAYSCALE;
     } else if(arg == "rgb") {
-        return ModelMetadata::RGB;
+        return ColorMode ::RGB;
     } else if(arg == "multiband") {
-        return ModelMetadata::MULTIBAND;
+        return ColorMode::MULTIBAND;
     }
 
-    return ModelMetadata::UNKNOWN;
+    return ColorMode::UNKNOWN;
 }
 
 void tryErase(vector<string>& names, const string& name)
