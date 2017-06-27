@@ -18,13 +18,13 @@
 #ifndef DEEPCORE_GBDXM_H
 #define DEEPCORE_GBDXM_H
 
-#include <classification/ModelMetadata.h>
+#include <classification/ModelPackage.h>
 #include <map>
 #include <memory>
 
-namespace dg {namespace deepcore { namespace classification {
+namespace dg { namespace gbdxm {
 
-enum Actions
+enum class Action
 {
     HELP,
     SHOW,
@@ -34,16 +34,14 @@ enum Actions
 
 struct GbdxmArgs
 {
-    Actions action;
-    bool verbose;
+    Action action = Action::HELP;
     std::string gbdxFile;
-
-    GbdxmArgs() : action(HELP), verbose(false) { }
 };
 
 struct GbdxmPackArgs : public GbdxmArgs
 {
-    std::unique_ptr<ModelMetadata> metadata;
+    const deepcore::classification::ModelIdentifier* identifier = nullptr;
+    std::unique_ptr<deepcore::classification::ModelPackage> package;
     std::string labelsFile;
     std::map<std::string, std::string> modelFiles;
     bool encrypt = true;
@@ -54,10 +52,8 @@ struct GbdxmUnpackArgs : public GbdxmArgs
     std::string outputDir;
 };
 
-void printVerbose(const GbdxmArgs& args, const std::string& message);
-
 void doAction(GbdxmArgs& args);
 
-} } } // namespace dg {namespace deepcore { namespace classification {
+} } // namespace dg { namespace gbdxm {
 
 #endif // DEEPCORE_GBDXM_H
