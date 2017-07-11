@@ -28,6 +28,7 @@
 #include <boost/range/adaptor/map.hpp>
 #include <geometry/cv_program_options.hpp>
 #include <json/json.h>
+#include <DeepCoreVersion.h>
 #include <classification/Classification.h>
 #include <classification/ModelMetadataJson.h>
 #include <utility/File.h>
@@ -167,8 +168,9 @@ po::detail::cmdline::style_parser buildExtraStyleParser()
 po::options_description buildVisibleOptions()
 {
     po::options_description desc(
-        "GBDX Model Packaging Tool\n"
-        "Version: " GBDXM_VERSION_STRING "\n\n"
+        "GDBX Model Packaging Tool\n"
+        "Version: " GBDXM_VERSION_STRING "\n"
+        "Built on DeepCore version: " DEEPCORE_VERSION_STRING "\n\n"
         "Usage: gbdxm <action> [options] [gbdxm file]\n\n"
         "Actions:\n"
         "  help  \t\t Show this help message.\n"
