@@ -97,7 +97,7 @@ void packModel(GbdxmPackArgs& args)
     DG_LOG(gbdxm, info) << "Packing " << args.package->type() << " model to " << args.gbdxFile;
 
     // Make sure the output file can be created
-    DG_CHECK(!fs::is_directory(args.gbdxFile), "Cannot write to output, %s is a directory.", args.gbdxFile);
+    DG_CHECK(!fs::is_directory(args.gbdxFile), "Cannot write to output, %s is a directory.", args.gbdxFile.c_str());
 
     auto parentPath = fs::path(args.gbdxFile).parent_path();
     if(!parentPath.empty() && !fs::exists(parentPath)) {
