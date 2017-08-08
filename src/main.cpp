@@ -562,7 +562,7 @@ unique_ptr<GbdxmArgs> readPackArgs(const po::variables_map& vm)
         args->encrypt = false;
     }
 
-    return args;
+    return std::move(args);
 }
 
 vector<string> readJsonMetadata(const string& fileName, GbdxmPackArgs& args)
@@ -648,7 +648,7 @@ unique_ptr<GbdxmArgs> readUnpackArgs(const po::variables_map& vm)
     // --output-dir
     args->outputDir = vm["output-dir"].as<string>();
 
-    return args;
+    return std::move(args);
 }
 
 void tryErase(vector<string>& names, const string& name)
