@@ -77,6 +77,22 @@ if (JSONCPP_FOUND)
     target_link_libraries(gbdxm ${JSONCPP_LIBRARY})
 endif()
 
+find_package(Caffe REQUIRED)
+if (Caffe_FOUND)
+    if (DEEPCORE_STATIC)
+        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            set(Caffe_LINK -Wl,-force_load caffe)
+        elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
+        endif()
+    else()
+        set(Caffe_LINK caffe)
+    endif()
+    include_directories(${Caffe_INCLUDE_DIRS})
+    target_link_libraries(gbdxm ${Caffe_LINK})
+endif()
+
+
 find_package(Threads)
 target_link_libraries(gbdxm ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
 
