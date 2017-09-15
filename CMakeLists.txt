@@ -77,6 +77,8 @@ if (JSONCPP_FOUND)
     target_link_libraries(gbdxm ${JSONCPP_LIBRARY})
 endif()
 
+#This find_package call for OpenCV is necessary according to the CaffeConfig.cmake file.
+find_package(OpenCV REQUIRED)
 find_package(Caffe REQUIRED)
 if (Caffe_FOUND)
     if (DEEPCORE_STATIC)
