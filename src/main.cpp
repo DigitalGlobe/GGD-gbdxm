@@ -209,9 +209,13 @@ void addShowOptions(po::options_description& desc)
 void addPackOptions(po::options_description& desc)
 {
     po::options_description pack("Pack Options");
+    string supportedTypes = "Type of the input model. Currently supported types:";
+    for(const auto& type : classification::ModelIdentifier::types()) {
+        supportedTypes += "\n \t - " + type;
+    }
+
     pack.add_options()
-        ("type,t", po::value<string>()->value_name("TYPE"),
-            "Type of the input model. Currently supported types:\n \t - caffe")
+        ("type,t", po::value<string>()->value_name("TYPE"), supportedTypes.c_str())
         ("json,j", po::value<string>()->value_name("PATH"),
             "Model metadata in JSON format. Command line parameters will override "
             "entries in this file if present.")
