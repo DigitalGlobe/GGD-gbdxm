@@ -15,7 +15,7 @@ endif()
 
 # gbdxm version
 set(gbdxm_VERSION_MAJOR 1)
-set(gbdxm_VERSION_MINOR 0)
+set(gbdxm_VERSION_MINOR 1)
 set(gbdxm_VERSION_PATCH 0)
 
 # Set the build number

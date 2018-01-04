@@ -30,7 +30,9 @@
 #include <json/json.h>
 #include <DeepCoreVersion.h>
 #include <classification/Classification.h>
+#include <classification/GbdxmCommon.h>
 #include <classification/ModelMetadataJson.h>
+#include <sstream>
 #include <utility/File.h>
 #include <utility/Error.h>
 #include <utility/Logging.h>
@@ -57,6 +59,7 @@ using std::map;
 using std::move;
 using std::remove_if;
 using std::string;
+using std::stringstream;
 using std::unique_ptr;
 using std::vector;
 
@@ -167,17 +170,22 @@ po::detail::cmdline::style_parser buildExtraStyleParser()
 
 po::options_description buildVisibleOptions()
 {
-    po::options_description desc(
+    stringstream ss;
+    ss <<
         "GDBX Model Packaging Tool\n"
         "Version: " GBDXM_VERSION_STRING "\n"
-        "Built on DeepCore version: " DEEPCORE_VERSION_STRING "\n\n"
+        "Built on DeepCore version: " DEEPCORE_VERSION_STRING "\n"
+        "GBDXM Metadata Version: " << classification::gbdxm::METADATA_VERSION << "\n\n"
         "Usage: gbdxm <action> [options] [gbdxm file]\n\n"
         "Actions:\n"
         "  help  \t\t Show this help message.\n"
         "  show  \t\t Show package metadata.\n"
         "  pack  \t\t Pack a model into a GBDX package.\n"
         "  unpack\t\t Unpack a GBDX package and output the original model.\n\n"
-        "General Options"
+        "General Options";
+
+    po::options_description desc(
+        ss.str()
     );
 
     desc.add_options()
@@ -302,7 +310,7 @@ void addUnpackOptions(po::options_description& desc)
 {
     po::options_description unpack("Unpack Options");
     unpack.add_options()
-        ("output-dir,o", po::value<string>()->value_name(po::name_with_default("PATH", "."))->default_value("."),
+        ("output-dir,o", po::value<string>()->value_name("PATH")->default_value("."),
             "Directory for the output model files. Default is current directory.");
 
     desc.add(unpack);
