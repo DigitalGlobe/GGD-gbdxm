@@ -68,12 +68,12 @@ namespace dg { namespace gbdxm {
 // Forward declarations
 
 po::detail::cmdline::style_parser buildExtraStyleParser();
-po::options_description buildVisibleOptions();
-po::options_description buildHiddenOptions();
+po::options_description buildHelpOptions();
+po::options_description buildParseOptions();
 void addShowOptions(po::options_description& desc);
-void addPackOptions(po::options_description& desc);
+void addPackOptions(po::options_description& desc, bool helpOptions);
 boost::shared_ptr<po::option_description> createFrameworkOption(classification::ItemDescription item, const char* type, const char* name, const char* ending);
-void addPackFrameworkOptions(po::options_description& desc);
+void addPackFrameworkOptions(po::options_description& desc, bool includeCategory);
 void addUnpackOptions(po::options_description& desc);
 
 void setupLogging(const po::variables_map& vm);
@@ -98,16 +98,9 @@ int main (int argc, const char* const* argv)
 
         classification::init();
 
-        // Build arguments
-        auto visible = buildVisibleOptions();
-        auto hidden = buildHiddenOptions();
-
-        po::options_description all;
-        all.add(visible).add(hidden);
-
         // First argument is action, which we parse out ourselves
         if(argc < 2) {
-            cout << visible << endl;
+            cout << buildHelpOptions() << endl;
             DG_ERROR_THROW("Must have at least 1 argument.");
         }
 
@@ -122,14 +115,17 @@ int main (int argc, const char* const* argv)
         po::variables_map vm;
 
         try {
+            // Build arguments
+            auto desc = buildParseOptions();
+
             po::store(po::command_line_parser(argc - 1, &argv[1])
                           .extra_style_parser(buildExtraStyleParser())
-                          .options(all)
+                          .options(desc)
                           .positional(p)
                           .run(), vm);
             po::notify(vm);
         } catch(...) {
-            cout << visible << endl;
+            cout << buildHelpOptions() << endl;
             DG_ERROR_RETHROW("");
         }
 
@@ -138,7 +134,7 @@ int main (int argc, const char* const* argv)
         // Read arguments, if invalid action or "help", print the usage details
         auto args = readArgs(vm, action);
         if(!args) {
-            cout << visible << endl;
+            cout << buildHelpOptions() << endl;
             DG_CHECK(action == "help", "Invalid action. The correct actions are help, show, pack, and unpack");
 
             exit(0);
@@ -168,7 +164,7 @@ po::detail::cmdline::style_parser buildExtraStyleParser()
     return po::combine_style_parsers(parsers);
 }
 
-po::options_description buildVisibleOptions()
+po::options_description buildHelpOptions()
 {
     stringstream ss;
     ss <<
@@ -193,18 +189,25 @@ po::options_description buildVisibleOptions()
         ("gbdxm-file,f", po::value<string>()->value_name("PATH"), "Input or output GBDXM file.");
 
     addShowOptions(desc);
-    addPackOptions(desc);
+    addPackOptions(desc, true);
     addUnpackOptions(desc);
 
     return move(desc);
 }
 
-po::options_description buildHiddenOptions()
+po::options_description buildParseOptions()
 {
     po::options_description desc;
     desc.add_options()
-        ("plaintext", "don't encrypt the model.")
-        ("image-type,i", po::value<string>()->value_name("TYPE"), "Image type. e.g. jpg (deprecated).");
+        ("verbose,v", "Verbose output.")
+        ("gbdxm-file,f", po::value<string>(), "Input or output GBDXM file.")
+        ("plaintext", "Don't encrypt the model.")
+        ("image-type,i", po::value<string>(), "Image type. e.g. jpg (deprecated).")
+        ("category,C", po::value<string>(), "Model category");
+
+    addShowOptions(desc);
+    addPackOptions(desc, false);
+    addUnpackOptions(desc);
 
     return move(desc);
 }
@@ -214,7 +217,7 @@ void addShowOptions(po::options_description& desc)
     // No options here, left for future expansion
 }
 
-void addPackOptions(po::options_description& desc)
+void addPackOptions(po::options_description& desc, bool helpOptions)
 {
     po::options_description pack("Pack Options");
     string supportedTypes = "Type of the input model. Currently supported types:";
@@ -228,7 +231,6 @@ void addPackOptions(po::options_description& desc)
             "Model metadata in JSON format. Command line parameters will override "
             "entries in this file if present.")
         ("name,n", po::value<string>()->value_name("NAME"), "Model name.")
-        ("category,C", po::value<string>()->value_name("CATEGORY"), "Model category.")
         ("version,V", po::value<string>()->value_name("VERSION"), "Model version.")
         ("description,d", po::value<string>()->value_name("DESCRIPTION"), "Model description.")
         ("labels,l", po::value<string>()->value_name("PATH"), "Labels file name.")
@@ -249,14 +251,14 @@ void addPackOptions(po::options_description& desc)
             "Model pixel resolution (optional).")
         ;
 
-    addPackFrameworkOptions(pack);
+    addPackFrameworkOptions(pack, helpOptions);
 
     desc.add(pack);
 }
 
 
 
-void addPackFrameworkOptions(po::options_description& desc)
+void addPackFrameworkOptions(po::options_description& desc, bool includeCategory)
 {
     for(const auto& type : classification::ModelIdentifier::types()) {
         const auto& identifier = *classification::ModelIdentifier::find(type);
@@ -266,6 +268,20 @@ void addPackFrameworkOptions(po::options_description& desc)
         title += " Options";
 
         po::options_description framework(title.c_str());
+
+        if(includeCategory) {
+            string categoryDesc = "Model category";
+            if(identifier.canDetectCategory()) {
+                categoryDesc += " (optional). ";
+            } else {
+                categoryDesc += ". ";
+            }
+
+            categoryDesc += "The supported categories are: " + join(identifier.categories(), ", ") + ".";
+
+            framework.add(boost::make_shared<po::option_description>(
+                "category,C", po::value<string>()->value_name("CATEGORY"), categoryDesc.c_str()));
+        }
 
         auto multiDesc = string("Set multiple ") + identifier.prettyType() + " options.";
 
@@ -303,7 +319,16 @@ boost::shared_ptr<po::option_description> createFrameworkOption(classification::
 
     description += ".";
 
-    return boost::make_shared<po::option_description>(option.c_str(), po::value<string>()->value_name(name), description.c_str());
+    if(!item.allowedValues.empty()) {
+        description += " Allowed values are: " + join(item.allowedValues, ", ") + ".";
+    }
+
+    auto value = po::value<string>()->value_name(name);
+    if(!item.defaultValue.empty()) {
+        value->default_value(item.defaultValue.c_str());
+    }
+
+    return boost::make_shared<po::option_description>(option.c_str(), value, description.c_str());
 }
 
 void addUnpackOptions(po::options_description& desc)
@@ -365,6 +390,13 @@ void readFrameworkPackItems(map<string, string>& items,
     for(const auto& item : descriptions) {
         auto it = options.find(item.name);
         if(it != options.end()) {
+            if(!item.allowedValues.empty()) {
+                auto valueIt = find(item.allowedValues.begin(), item.allowedValues.end(), it->second);
+                DG_CHECK(valueIt != item.allowedValues.end(),
+                         "Invalid --%s-%s option: allowed values are: %s",
+                        item.name.c_str(), prefix.c_str(), join(item.allowedValues, ", ").c_str());
+            }
+
             items[it->first] = it->second;
             options.erase(it);
         } else if(!item.optional && items.find(item.name) == items.end()) {
