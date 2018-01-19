@@ -41,6 +41,7 @@ struct GbdxmArgs
 struct GbdxmPackArgs : public GbdxmArgs
 {
     const deepcore::classification::ModelIdentifier* identifier = nullptr;
+    std::string type;
     std::unique_ptr<deepcore::classification::ModelPackage> package;
     std::string labelsFile;
     std::map<std::string, std::string> modelFiles;
