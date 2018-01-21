@@ -189,9 +189,8 @@ po::options_description buildHelpOptions()
 
     addShowOptions(desc);
     addPackOptions(desc, true);
-    addUnpackOptions(desc);
 
-    return move(desc);
+    return desc;
 }
 
 po::options_description buildParseOptions()
@@ -206,9 +205,9 @@ po::options_description buildParseOptions()
 
     addShowOptions(desc);
     addPackOptions(desc, false);
-    addUnpackOptions(desc);
+    addUnpackOptions(desc); // Hidden activity, options not in help
 
-    return move(desc);
+    return desc;
 }
 
 void addShowOptions(po::options_description& desc)
@@ -324,7 +323,7 @@ boost::shared_ptr<po::option_description> createFrameworkOption(classification::
 
     auto value = po::value<string>()->value_name(name);
     if(!item.defaultValue.empty()) {
-        value->default_value(item.defaultValue.c_str());
+        value->default_value(item.defaultValue);
     }
 
     return boost::make_shared<po::option_description>(option.c_str(), value, description.c_str());
