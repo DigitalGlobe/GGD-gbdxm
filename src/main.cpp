@@ -135,7 +135,7 @@ int main (int argc, const char* const* argv)
         auto args = readArgs(vm, action);
         if(!args) {
             cout << buildHelpOptions() << endl;
-            DG_CHECK(action == "help", "Invalid action. The correct actions are help, show, pack, and unpack");
+            DG_CHECK(action == "help", "Invalid action. The correct actions are help, show, and pack");
 
             exit(0);
         }
@@ -176,8 +176,7 @@ po::options_description buildHelpOptions()
         "Actions:\n"
         "  help  \t\t Show this help message.\n"
         "  show  \t\t Show package metadata.\n"
-        "  pack  \t\t Pack a model into a GBDX package.\n"
-        "  unpack\t\t Unpack a GBDX package and output the original model.\n\n"
+        "  pack  \t\t Pack a model into a GBDX package.\n\n"
         "General Options";
 
     po::options_description desc(
@@ -190,9 +189,8 @@ po::options_description buildHelpOptions()
 
     addShowOptions(desc);
     addPackOptions(desc, true);
-    addUnpackOptions(desc);
 
-    return move(desc);
+    return desc;
 }
 
 po::options_description buildParseOptions()
@@ -207,9 +205,9 @@ po::options_description buildParseOptions()
 
     addShowOptions(desc);
     addPackOptions(desc, false);
-    addUnpackOptions(desc);
+    addUnpackOptions(desc); // Hidden activity, options not in help
 
-    return move(desc);
+    return desc;
 }
 
 void addShowOptions(po::options_description& desc)
@@ -267,7 +265,7 @@ void addPackFrameworkOptions(po::options_description& desc, bool includeCategory
         title += identifier.prettyType();
         title += " Options";
 
-        po::options_description framework(title.c_str());
+        po::options_description framework(title);
 
         if(includeCategory) {
             string categoryDesc = "Model category";
@@ -325,7 +323,7 @@ boost::shared_ptr<po::option_description> createFrameworkOption(classification::
 
     auto value = po::value<string>()->value_name(name);
     if(!item.defaultValue.empty()) {
-        value->default_value(item.defaultValue.c_str());
+        value->default_value(item.defaultValue);
     }
 
     return boost::make_shared<po::option_description>(option.c_str(), value, description.c_str());
@@ -439,30 +437,28 @@ unique_ptr<GbdxmArgs> readPackArgs(const po::variables_map& vm)
 {
     auto args = make_unique<GbdxmPackArgs>();
     args->action = Action::PACK;
+    vector<string> missingFields;
+    vector<string> errors;
+
+    // --type
+    if(vm.count("type")) {
+        args->type = vm["type"].as<string>();
+        to_lower(args->type);
+
+        args->package = classification::ModelPackage::create(args->type.c_str());
+        missingFields = classification::ModelMetadataJson::fieldNames(args->type);
+        tryErase(missingFields, "type");
+    }
 
     // --json
-    vector<string> missingFields;
     if(vm.count("json")) {
         missingFields = readJsonMetadata(vm["json"].as<string>(), *args);
     }
 
-    // --type
-    if(!args->package) {
-        DG_CHECK(vm.count("type") == 1, "Missing model type");
-
-        auto type = vm["type"].as<string>();
-        to_lower(type);
-
-        args->package = classification::ModelPackage::create(type.c_str());
-        missingFields = classification::ModelMetadataJson::fieldNames(type);
-        tryErase(missingFields, "type");
-        tryErase(missingFields, "version");
-    }
-
-    args->identifier = &args->package->identifier();
-
+    DG_CHECK(!args->type.empty() && args->package, "Missing model type")
+    tryErase(missingFields, "version");
     tryErase(missingFields, "size");
-
+    args->identifier = &args->package->identifier();
     auto& metadata = args->package->metadata();
 
     // --version
@@ -515,7 +511,7 @@ unique_ptr<GbdxmArgs> readPackArgs(const po::variables_map& vm)
             DG_ERROR_THROW("Invalid date/time format in --date-time argument");
         }
         metadata.setTimeCreated(timeCreated);
-    } else if(find(missingFields.begin(), missingFields.end(), "timeCreated" ) != missingFields.end()){
+    } else if(find(missingFields.begin(), missingFields.end(), "timeCreated" ) != missingFields.end()) {
         metadata.setTimeCreated(time(nullptr));
     }
 
@@ -540,21 +536,23 @@ unique_ptr<GbdxmArgs> readPackArgs(const po::variables_map& vm)
 
     // --color-mode
     if(vm.count("color-mode")) {
-        metadata.setColorMode(classification::colorModeFromString(vm["color-mode"].as<string>()));
-        DG_CHECK(metadata.colorMode() != classification::ColorMode::UNKNOWN,
-                "Invalid --color-mode argument");
-
-        tryErase(missingFields, "colorMode");
+        auto colorMode = classification::colorModeFromString(vm["color-mode"].as<string>());
+        if(colorMode != classification::ColorMode::UNKNOWN) {
+            metadata.setColorMode(colorMode);
+            tryErase(missingFields, "colorMode");
+        } else {
+            errors.emplace_back("Unsupported option for --color-mode '" + vm["color-mode"].as<string>() + "'");
+        }
     }
 
     // --resolution
     if(vm.count("resolution")) {
         metadata.setResolution(vm["resolution"].as<cv::Size2d>());
+        tryErase(missingFields, "resolution");
     }
 
     // "--<type>-<option>" arguments, e.g. "--caffe-model"
     auto missingArgs = readFrameworkPackArgs(vm, *args);
-    vector<string> errors;
 
     if(!missingArgs.empty()) {
         errors.push_back(string("Missing ") + metadata.type() + " model arguments: --" + join(missingArgs, ", --"));
@@ -563,7 +561,12 @@ unique_ptr<GbdxmArgs> readPackArgs(const po::variables_map& vm)
         readModelMetadata(*args, missingFields);
     }
 
-    //create an error message for missingFields
+    // --plaintext
+    if(vm.count("plaintext")) {
+        args->encrypt = false;
+    }
+
+    // Create an error message for missingFields
     if(!missingFields.empty()) {
         auto cliMap = classification::ModelMetadataJson::fieldToOption(metadata.type());
         vector<string> cliFields;
@@ -580,32 +583,29 @@ unique_ptr<GbdxmArgs> readPackArgs(const po::variables_map& vm)
         errors.push_back("Missing required metadata arguments: --" + join(cliFields, ", --"));
     }
 
-    auto categories = args->identifier->detectCategory(*args->package);
-    if(categories.empty()) {
-        if(metadata.category().empty()) {
-            errors.emplace_back("Invalid or unsupported model: category could not be detected");
-        } else {
-            errors.emplace_back("Invalid or unsupported model");
-        }
-    } else if(!metadata.category().empty()) {
-        if(find(categories.begin(), categories.end(), metadata.category()) == categories.end()) {
-            errors.push_back(
-                "Model category '" + metadata.category()  + "' is invalid,"
-                " possible categories for this model are: " + join(categories, ", "));
-        }
-    } else if(categories.size() > 1) {
-        errors.push_back("Please specify a model category, possible categories "
-                         "for this model are: " + join(categories, ", "));
+    // Create an error if category is invalid or cannot be inferred
+    vector<string> categories;
+    if (args->identifier->canDetectCategory()) {
+        categories = args->identifier->detectCategory(*args->package);
+        DG_CHECK(!categories.empty(), "Category could not be detected for type '%s'", args->type.c_str());
     } else {
-        metadata.setCategory(categories[0]);
+        categories = args->identifier->categories();
+        DG_CHECK(!categories.empty(), "No categories for invalid or unsupported type '%s'", args->type.c_str());
+    }
+
+    if(metadata.category().empty()) {
+        if(categories.size() == 1) {
+            metadata.setCategory(categories[0]);
+        } else {
+            errors.push_back("Please specify a category, possible categories "
+                             "for this model are: " + join(categories, ", "));
+        }
+    } else if(find(categories.begin(), categories.end(), metadata.category()) == categories.end()) {
+        errors.push_back("Category '" + metadata.category()  + "' is invalid,"
+                         " possible categories for this model are: " + join(categories, ", "));
     }
 
     DG_CHECK(errors.empty(), "%s", join(errors, "\n").c_str());
-
-    if(vm.count("plaintext")) {
-        args->encrypt = false;
-    }
-
     return std::move(args);
 }
 
@@ -623,8 +623,9 @@ vector<string> readJsonMetadata(const string& fileName, GbdxmPackArgs& args)
     DG_CHECK(reader.parse(ifs, root), "Error parsing metadata: %s",
              reader.getFormattedErrorMessages().c_str());
 
-    auto metadata = classification::ModelMetadataJson::fromJsonPartial(root, missingFields);
+    auto metadata = classification::ModelMetadataJson::fromJsonPartial(root, missingFields, args.type);
     args.package = classification::ModelPackage::create(move(metadata));
+    args.type = args.package->type();
 
     if(root.isMember("content")) {
         DG_CHECK(root["content"].type() == Json::objectValue,
@@ -642,7 +643,7 @@ void readModelMetadata(GbdxmPackArgs& args, vector<string>& missingFields)
 {
     // Load the files with metadata into the ModelPackage
     for(const auto& itemName : args.identifier->metadataItems()) {
-        const string& fileName = args.modelFiles[itemName];
+        const auto& fileName = args.modelFiles[itemName];
 
         const auto& descriptions = args.identifier->itemDescriptions();
         auto it = find_if(descriptions.begin(), descriptions.end(), [&itemName](const classification::ItemDescription& desc) {
