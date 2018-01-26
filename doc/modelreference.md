@@ -189,7 +189,7 @@ similarly for _Scores_ and _Bounding Boxes_.
 A segmentation model performs pixel by pixel classification of the input image
 and generates a confidence per label confidence mask.  Pixels in each label above
 a confidence are vectorized into polygons for output.  The confidence of each
-polygon is the average of the pixels that are contained.
+polygon is the average of the pixels that are contained within it.
 
 Input layers:
  - _Input image_ of size {`batch size`, `image height`, `image width`,
