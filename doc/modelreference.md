@@ -183,7 +183,24 @@ each tensor into batches.  For instance, given the following:
 
 _Classes_ would be split by batch into {{1}, {2, 1, 2}, {2}, {3, 1, 2}} and
 similarly for _Scores_ and _Bounding Boxes_.
- 
+
+### Segmentation Category
+
+A segmentation model performs pixel by pixel classification of the input image
+and generates a confidence per label confidence mask.  Pixels in each label above
+a confidence are vectorized into polygons for output.  The confidence of each
+polygon is the average of the pixels that are contained within it.
+
+Input layers:
+ - _Input image_ of size {`batch size`, `image height`, `image width`,
+ `number of channels`}.
+ - (Optional) _Confidence_ scalar. If and only if this exists in the
+ model, it must be specified in the model metadata.
+
+Output layer:
+ - _Confidences_ of size {`batch size`, `image height`, `image width`,
+ `number of labels`}.
+
 
 ## Metadata Parameters
 The following parameters are not used in processing, but are stored in the model
