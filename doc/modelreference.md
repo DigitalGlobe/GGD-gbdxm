@@ -72,7 +72,7 @@ Input layer:
  `image width`}.
  
 Output layer:
- - _Confidences_ with size {`batch size`, `number of labels`, `image height`,
+ - _Confidences_ of size {`batch size`, `number of labels`, `image height`,
  `image width`}.  The `output-layer` must be specified if multiple layers exist
  at the top of the network.
 
@@ -89,16 +89,16 @@ Input layer:
  `image width`}.
  
 Output layer:
- - _Coverage_ of size {`batch size`, `number of labels`, `height`, `width`}.  This must be
- named "coverage".
- is interpreted as the confidence score of the bounding box.
+ - _Coverage_ of size {`batch size`, `number of labels`, `height`, `width`}.  
+ This must be named "coverage". It is interpreted as the confidence score of the
+ bounding box.
  - _BBoxes_  of size {`batch size`, 4, `height`, `width`}. This must be named 
- "bboxes".  Boxes are specified in the order "Left", "Top", "Right", "Bottom".
+ "bboxes".  Boxes are interpreted in the order "Left", "Top", "Right", "Bottom".
 
 Notes:
  - The `height` and `width` of the outputs are related, but not the same as the
- image size.  These dimensions must be of equal size in each output layer.
- - The "output-layer" parameter, if given, is ignored.
+ image size.  These dimensions must be of the same in each output layer.
+ - The "output-layer" parameter is ignored.
 
 
 ## TensorFlow
@@ -153,8 +153,8 @@ Input layers:
 
 Output layer:
  - _Data_ of size {`batch size`, `number of labels`}.  Each element refers to 
- the likelihood that that label describes the image.  The labels must be ordered
- in the same order as they are in the model metadata.
+ the likelihood that that label describes the image.  Data must be ordered
+ to correspond with the order of the labels in the model metadata.
 
 ### Detector Category
 
@@ -178,27 +178,11 @@ Note that for the _Bounding boxes_, _Scores_, and _Classes_ layers, detections
 are concatenated from each batch.  _Number of detections_ can be used to split
 each tensor into batches.  For instance, given the following:
 
- - _Classes_ of size {1, 2, 1, 2, 2, 3, 1, 2}
+ - _Classes_ {1, 2, 1, 2, 2, 3, 1, 2}
  - _Number of detections_ {1, 3, 1, 3}
 
 _Classes_ would be split by batch into {{1}, {2, 1, 2}, {2}, {3, 1, 2}} and
 similarly for _Scores_ and _Bounding Boxes_.
-
-### Segmentation Category _[WIP]_
-
-A segmentation model performs pixel by pixel classification of the input image
-and generates a confidence per label confidence mask.  Pixels in each label above
-a confidence are vectorized into polygons for output.  The confidence of each
-polygon is the average of the pixels that are contained within it.
-
-Input layers:
- - _Input image_ of size {`batch size`, `image height`, `image width`,
- `number of channels`}.
- - (Optional) _Confidence_ scalar. If and only if this exists in the
- model, it must be specified in the model metadata.
-
-Output layer:
- - _Confidences_ with size {`batch size`, `image height`, `image width`, `number of labels`}.  
  
 
 ## Metadata Parameters
