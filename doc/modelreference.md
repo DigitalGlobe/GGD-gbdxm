@@ -14,18 +14,17 @@ type of model.  They may be used to determine the appropriate input imagery.
                                         multiband
 ```
 
-#### Color Mode
+### Color Mode
  - `grayscale` - The model and data must be single band.
- - `rgb` - The model and data must be 3 band, models are expected to be a 
- - `multiband` - The model and data may be any number of bands, but it must match
- 
-#### Model Size
+ - `rgb` - The model and data must be 3 band, and transformations will be made
+ to have a consistent color order.
+ - `multiband` - The model and data may be any matching number of bands
  
  
 ## Caffe
 
 Currently supported is the [NVIDIA branch of Caffe at version 15](https://github.com/NVIDIA/caffe/tree/caffe-0.15).  Except for where noted below,
-only the stock c++  layers are supported.  Caffe was originally developed by the
+only the stock C++ layers are supported.  Caffe was originally developed by the
 [Berkeley Artificial Intelligence Research](http://caffe.berkeleyvision.org/) 
 (BAIR) Lab (formerly known as the Berkeley Vision and Learning Center (BVLC)).
 
@@ -55,13 +54,11 @@ Input layer:
  `image width`}.
  
 Output layer:
- - _Data_ of size {`batch size`, `number of labels`}.  This must be in the top
- of the network and have a "Softmax" type.  Each element refers to the 
- likelihood that that label describes the image.  The labels must be ordered
- in the same order as they are in the model metadata.
- 
-Notes:
- - The "output-layer" parameter is ignored.
+ - _Confidences_ of size {`batch size`, `number of labels`}.  This must be in the
+ top of the network.  Each element refers to the likelihood that that label
+ describes the image.  The labels must be ordered in the same order as they are
+ in the model metadata.  If "output-layer" is not specified and only one Sigmoid
+ or Softmax layer exists on the top of the model, it will be used.
 
 ### Segmentation Category
 
