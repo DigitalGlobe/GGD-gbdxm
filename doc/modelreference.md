@@ -127,7 +127,7 @@ Notes:
                                       (optional).
 --tensorflow-linear-stretch VALUE (=0.0 1.0 0.0 1.0)
                                       Stretch the values in the source.  Four
-                                      parameters arerequired in the form 
+                                      parameters are required in the form 
                                       'breakpoint0_in breakpoint0_out 
                                       breakpoint1_in breakpoint1_out', 
                                       'breakpoint_in breakpoint_out', or 
