@@ -125,10 +125,52 @@ Notes:
                                       (optional).
 --tensorflow-confidence-layer VALUE   Input confidence threshold layer name 
                                       (optional).
---tensorflow-mean VALUE (=0.0)        Scalar value for mean (optional).
---tensorflow-scale VALUE (=1.0)       Scalar value for pixel scale 
+--tensorflow-linear-stretch VALUE (=0.0 1.0 0.0 1.0)
+                                      Stretch the values in the source.  Four
+                                      parameters are required in the form 
+                                      'breakpoint0_in breakpoint0_out 
+                                      breakpoint1_in breakpoint1_out', 
+                                      'breakpoint_in breakpoint_out', or 
+                                      'shift' (constants may be used for 
+                                      calculations from the source) 
                                       (optional).
 ```
+
+#### Linear Stretch
+
+Linear stretch allows for pre-processing of the image's dynamic range using 1 or 2
+breakpoints.  All calculations are performed for every value in the image, without
+regard to channel.  Parameters should be joined by spaces or commas and given as
+a single argument (e.g. use quotes to group parameters in the shell).
+
+In the one breakpoint version, 1 or 2 parameters are given to shift each pixel's
+value down by some amount.  If only one parameter is given, the second
+is default to 0.  For example:
+
+ - "mean 256", shift the mean of the image to 256
+ - "50", shift the image down by 50 (i.e. subtract)
+
+In the two breakpoint version, breakpoints are used to define a linear mapping.
+No clamping is performed.  For example:
+
+ - "min 0, max 1", scales and shifts each subset to the range 0-1.
+ - "median(5) 0, median(95) 255", stretches subsets so that the 5% and 95% medians
+   are mapped to 0 and 255
+
+![Visualiation of linear stretch](linear-stretch.png)
+
+Each parameter may be a constant, or one of the following methods.  Calculations
+are performed for each subset of the image.
+
+ - "min" - The minimum of the image
+ - "max" - The maximum of the image
+ - "mean" - The mean of the image
+ - "stddev" - The stddev of the image
+ - "stddev(xx.xx)" - A xx.xx multiple of the stddev of the image (e.g. "stddev(-1)" is -1 * stddev)
+ - "median" - The median of the image
+ - "median(xx.xx)" - The xx.xx median of the image (e.g. "median(5)" is the 5% median)
+ - "xx.xx" - A constant value
+ - "constant(xx.xx)" - A constant value
 
 ### General Notes
 

@@ -323,7 +323,7 @@ boost::shared_ptr<po::option_description> createFrameworkOption(classification::
 
     auto value = po::value<string>()->value_name(name);
     if(!item.defaultValue.empty()) {
-        value->default_value(item.defaultValue);
+        value->default_value("\"" + item.defaultValue + "\"");
     }
 
     return boost::make_shared<po::option_description>(option.c_str(), value, description.c_str());
