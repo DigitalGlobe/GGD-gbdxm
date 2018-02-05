@@ -138,9 +138,10 @@ Notes:
 
 #### Linear Stretch
 
-Linear stretch allows for preprocessing of the image's dynamic range using 1 or 2
+Linear stretch allows for pre-processing of the image's dynamic range using 1 or 2
 breakpoints.  All calculations are performed for every value in the image, without
-regard to channel.
+regard to channel.  Parameters should be joined by spaces or commas and given as
+a single argument (e.g. use quotes to group parameters in the shell).
 
 In the one breakpoint version, 1 or 2 parameters are given to shift each pixel's
 value down by some amount.  If only one parameter is given, the second
