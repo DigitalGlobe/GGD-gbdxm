@@ -108,10 +108,13 @@ Notes:
 ```
 -C [ --category ] CATEGORY            Model category. The supported 
                                       categories are: detector, classifier, 
-                                      segmentation.
+                                      segmentation, yolo.
 --tensorflow NAME VALUE [NAME VALUE ...]
                                       Set multiple TensorFlow options.
 --tensorflow-model PATH               A frozen TensorFlow model file name.
+--tensorflow-anchors PATH             A list of anchors (only for yolo model)
+                                      file name (optional).
+
 --tensorflow-input-layer VALUE (=input)
                                       Image input layer name (optional).
 --tensorflow-input-datatype VALUE (=float)
@@ -226,6 +229,36 @@ each tensor into batches.  For instance, given the following:
 _Classes_ would be split by batch into {{1}, {2, 1, 2}, {2}, {3, 1, 2}} and
 similarly for _Scores_ and _Bounding Boxes_.
  
+### YOLO Detection Category
+
+A YOLO type detector in Tensorflow
+
+Input layers:
+ - _Input image_ of size {`batch size`, `image height`, `image width`,
+ `number of channels`}.
+ - (Optional) _Confidence_ scalar.  It must be specified in the model metadata
+ if and only if this exists in the model.
+
+Output layers, which must be specified in the following order:
+ - _Output_ of size {`batch size`, `row`, `col`, `anchor pair`, `data`}. Where
+ row and col are in a box search space (which doesn't correspond to the image
+ size).  At each `batch size`, `row`, `col`, `anchor pair`, `data` is
+ interpreted as follows:
+
+ ```
+ x = (col + sigmoid(data[0])) / size(cols); // Centered, proportional to the subset
+ y = (row + sigmoid(data[1])) / size(rows); // Centered, proportional to the subset
+ w = anchor[0] * std::exp(data[2]) / size(cols); // Proportional to the subset
+ h = anchor[1] * std::exp(data[3]) / size(rows); // Proportional to the subset
+ conf = sigmoid(data[4]);
+ labelIdx = argmax(&data[5], (int)numLabels);
+ ```
+
+Other parameters:
+ - _Anchors_, which are specified as a file. The file must contain anchor
+ coordinates, one per line. The coordinates are used in pairs, and there must be
+ the same number of pairs as the 4th dimension of the output above.
+
 
 ## Metadata Parameters
 The following parameters are not used in processing, but are stored in the model
