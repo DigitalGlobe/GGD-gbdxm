@@ -106,37 +106,44 @@ Notes:
 ### Options
 
 ```
--C [ --category ] CATEGORY            Model category. The supported 
-                                      categories are: detector, classifier, 
-                                      segmentation, yolo.
---tensorflow NAME VALUE [NAME VALUE ...]
-                                      Set multiple TensorFlow options.
---tensorflow-model PATH               A frozen TensorFlow model file name.
---tensorflow-anchors PATH             A list of anchors (only for yolo model)
-                                      file name (optional).
-
---tensorflow-input-layer VALUE (=input)
-                                      Image input layer name (optional).
---tensorflow-input-datatype VALUE (=float)
-                                      Image input DataType. Overridden if 
-                                      given input-layer has the data type 
-                                      attribute (optional). Allowed values 
-                                      are: int8, uint8, int16, uint16, int32,
-                                      int64, float, double.
---tensorflow-output-layers VALUE (=output)
-                                      Output layer name(s), comma separated 
-                                      (optional).
---tensorflow-confidence-layer VALUE   Input confidence threshold layer name 
-                                      (optional).
---tensorflow-linear-stretch VALUE (=0.0 1.0 0.0 1.0)
-                                      Stretch the values in the source.  Four
-                                      parameters are required in the form 
-                                      'breakpoint0_in breakpoint0_out 
-                                      breakpoint1_in breakpoint1_out', 
-                                      'breakpoint_in breakpoint_out', or 
-                                      'shift' (constants may be used for 
-                                      calculations from the source) 
-                                      (optional).
+  -C [ --category ] CATEGORY            Model category. The supported 
+                                        categories are: detector, classifier, 
+                                        segmentation, ssd, yolo.
+  --tensorflow NAME VALUE [NAME VALUE ...]
+                                        Set multiple TensorFlow options.
+  --tensorflow-model PATH               A frozen TensorFlow model file name.
+  --tensorflow-anchors PATH             Anchor data, one value per line (only 
+                                        for yolo models) file name (optional).
+  --tensorflow-input-layer VALUE (="input")
+                                        Image input layer name (optional).
+  --tensorflow-input-datatype VALUE (="float")
+                                        Image input DataType. Extracted from 
+                                        model if the data type attribute exists
+                                        (optional). Allowed values are: int8, 
+                                        uint8, int16, uint16, int32, int64, 
+                                        float, double.
+  --tensorflow-output-layers VALUE (="output")
+                                        Output layer name(s), comma separated 
+                                        (optional).
+  --tensorflow-output-space VALUE (="normalized")
+                                        For detection algorithms, the range of 
+                                        the output coordinates (optional). 
+                                        Allowed values are: normalized, pixel.
+  --tensorflow-output-type VALUE (="minmax")
+                                        The expected box type of the output 
+                                        (only for ssd models) (optional). 
+                                        Allowed values are: centroid, minmax.
+  --tensorflow-confidence-layer VALUE   Input confidence threshold layer name 
+                                        (optional).
+  --tensorflow-linear-stretch VALUE (="0.0 1.0 0.0 1.0")
+                                        Stretch the values in the source.  Four
+                                        parameters are required in the form 
+                                        'breakpoint0_in breakpoint0_out 
+                                        breakpoint1_in breakpoint1_out', 
+                                        'breakpoint_in breakpoint_out', or 
+                                        'shift' (constants may be used for 
+                                        calculations from the source) 
+                                        (optional).
 ```
 
 #### Linear Stretch
@@ -203,7 +210,7 @@ Output layer:
 
 ### Detector Category
 
-The detector in TensorFlow 
+The detector in TensorFlow.
 
 Input layers:
  - _Input image_ of size {`batch size`, `image height`, `image width`,
@@ -228,10 +235,16 @@ each tensor into batches.  For instance, given the following:
 
 _Classes_ would be split by batch into {{1}, {2, 1, 2}, {2}, {3, 1, 2}} and
 similarly for _Scores_ and _Bounding Boxes_.
+
+Other parameters:
+ - _Output-Space_, which is either "normalized" or "pixel". If "normalized", the
+ coordinates above are expected to be in normalized to 0-1 per subset. If "pixel",
+ the coordinates above are expected in pixel space.
+
  
 ### YOLO Detection Category
 
-A YOLO type detector in Tensorflow
+A YOLO2 type detector in Tensorflow.
 
 Input layers:
  - _Input image_ of size {`batch size`, `image height`, `image width`,
@@ -240,16 +253,17 @@ Input layers:
  if and only if this exists in the model.
 
 Output layers, which must be specified in the following order:
- - _Output_ of size {`batch size`, `row`, `col`, `anchor pair`, `data`}. Where
+ - _Output_ of size {`batch size`, `rows`, `cols`, `anchor pairs`, `data`}. Where
  row and col are in a box search space (which doesn't correspond to the image
- size).  At each `batch size`, `row`, `col`, `anchor pair`, `data` is
- interpreted as follows:
+ size).  The output is intepreted in the same manner as
+ [`cython_utils.cy_yolo2_findboxes`](https://github.com/thtrieu/darkflow/blob/master/darkflow/cython_utils/cy_yolo2_findboxes.pyx#L53).
+ `data` results in a vector which is interpreted as:
 
  ```
- x = (col + sigmoid(data[0])) / size(cols); // Centered, proportional to the subset
- y = (row + sigmoid(data[1])) / size(rows); // Centered, proportional to the subset
- w = anchor[0] * std::exp(data[2]) / size(cols); // Proportional to the subset
- h = anchor[1] * std::exp(data[3]) / size(rows); // Proportional to the subset
+ x = (col + sigmoid(data[0])) / size(cols); // Centered
+ y = (row + sigmoid(data[1])) / size(rows); // Centered
+ w = anchor[0] * std::exp(data[2]) / size(cols);
+ h = anchor[1] * std::exp(data[3]) / size(rows);
  conf = sigmoid(data[4]);
  labelIdx = argmax(&data[5], (int)numLabels);
  ```
@@ -258,6 +272,37 @@ Other parameters:
  - _Anchors_, which are specified as a file. The file must contain anchor
  coordinates, one per line. The coordinates are used in pairs, and there must be
  the same number of pairs as the 4th dimension of the output above.
+ - _Output-Space_, which is either "normalized" or "pixel". If "normalized", the
+ coordinates above are expected to be in normalized to 0-1 per subset. If "pixel",
+ the coordinates above are expected in pixel space.  (The yolo2 implementation
+ above uses pixel space.)
+
+### SSD Detection Category
+
+A SSD type detector in Tensorflow.
+
+Input layers:
+ - _Input image_ of size {`batch size`, `image height`, `image width`,
+ `number of channels`}.
+ - (Optional) _Confidence_ scalar.  It must be specified in the model metadata
+ if and only if this exists in the model.
+
+Output layers, which must be specified in the following order:
+ - _Output_ of size {`batch size`, `box`, `data`}. Where `box` is the box search
+ space. `data` results in a vector which contains [one-hot vector for the classes,
+ 4 predicted coordinate offsets, 4 anchor box coordinates, 4 variances].  The
+ output is intepreted in the same manner as
+  [`singleshot.util.decode_y2`](https://github.com/lababidi/singleshot/blob/master/singleshot/util.py#L1475).
+ (The calculations of the box in pixel space depends on a the parameters below.)
+
+Other parameters:
+ - _Output-Space_, which is either "normalized" or "pixel". If "normalized", the
+ coordinates above are expected to be in normalized to 0-1 per subset. If "pixel",
+ the coordinates above are expected in pixel space.
+ - _Output-Type_, which is either "centroid" or "minmax". The box coordinate
+ format that the model outputs. Can be either 'centroids' for the format
+ `(cx, cy, w, h)` (box center coordinates, width, and height) or 'minmax'
+ for the format `(xmin, xmax, ymin, ymax)`.
 
 
 ## Metadata Parameters

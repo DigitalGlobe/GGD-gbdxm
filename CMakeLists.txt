@@ -4,10 +4,11 @@ cmake_policy(SET CMP0003 NEW)
 
 ENABLE_LANGUAGE(C)
 project(gbdxm CXX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 #release code
-option(DEEPCORE_RELEASE, "Indicates a release build of gbdxm" OFF)
+option(DEEPCORE_RELEASE "Indicates a release build of gbdxm" OFF)
 set(DEEPCORE_RC "" CACHE STRING "The release candidate version for DeepCore pre-release software.")
 if(DEEPCORE_RELEASE)
     message("Generating release build.  No build number will be appended to the version number.")
